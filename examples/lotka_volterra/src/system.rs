@@ -1,0 +1,33 @@
+use gds::system::BaseSystem;
+use gds::state;
+
+
+pub struct LotkaVolterraSystem {
+  population_size: f64,
+  food_supply: f64,
+  reproduction_rate: f64,
+  consumption_rate: f64,
+}
+
+pub struct State {
+  population_size: f64,
+  food_supply: f64,
+}
+
+impl state::State for State {}
+
+impl BaseSystem<State> for LotkaVolterraSystem {
+  fn initial_step(&self) -> State {
+    State {
+      population_size: self.population_size,
+      food_supply: self.food_supply,
+    }
+  }
+
+  fn step(&self, state: State, _history: Vec<&State>) -> State {
+    State {
+      population_size: (state.population_size + self.reproduction_rate * state.food_supply).max(0.0),
+      food_supply: (state.food_supply - self.consumption_rate * state.population_size).max(0.0)
+    }
+  }
+}
