@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
-use crate::{system::BaseSystem, state::State};
+use crate::{system::BaseSystem, state::BaseState};
 
-pub struct Simulation<U: State, T: BaseSystem<U>> {
+pub struct Simulation<U: BaseState, T: BaseSystem<U>> {
   system: T,
   state: PhantomData<U>
 }
 
-impl<U: State, T: BaseSystem<U>> Simulation<U, T> {
+impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
   pub fn new(system: T) -> Self {
     Simulation {
       system,

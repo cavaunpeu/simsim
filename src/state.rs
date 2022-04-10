@@ -1,1 +1,1 @@
-pub trait State {}
+pub trait BaseState {}

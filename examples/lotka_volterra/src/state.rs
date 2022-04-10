@@ -5,4 +5,4 @@ pub struct State {
   pub food_supply: f64,
 }
 
-impl state::State for State {}
+impl state::BaseState for State {}
