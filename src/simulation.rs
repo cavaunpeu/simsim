@@ -15,11 +15,11 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
     }
   }
 
-  pub fn run(&self, runs: i32, steps_per_run: i32, _visualize_results: bool) -> Vec<(U, i32, i32)> {
-    let mut results = Vec::<(U, i32, i32)>::new();
+  pub fn run(&self, runs: u32, steps_per_run: u32, _visualize_results: bool) -> Vec<(U, u32, u32)> {
+    let mut results = Vec::<(U, u32, u32)>::new();
     for run in 0..runs {
       let mut history = Vec::<U>::new();
-      let mut index = Vec::<(i32, i32)>::new();
+      let mut index = Vec::<(u32, u32)>::new();
       for step in 0..steps_per_run {
         let state = match step {
           0 => self.system.initial_step(),
