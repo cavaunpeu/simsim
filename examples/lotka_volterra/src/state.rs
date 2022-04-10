@@ -1,4 +1,4 @@
-use gds::state;
+use simsim::state;
 
 #[derive(Debug)]
 pub struct State {

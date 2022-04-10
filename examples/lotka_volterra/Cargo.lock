@@ -56,13 +56,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gds"
-version = "0.1.0"
-dependencies = [
- "clap",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -110,7 +103,7 @@ name = "lotka_volterra"
 version = "0.1.0"
 dependencies = [
  "clap",
- "gds",
+ "simsim",
 ]
 
 [[package]]
@@ -168,6 +161,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "632d02bff7f874a36f33ea8bb416cd484b90cc66c1194b1a1110d067a7013f58"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "simsim"
+version = "0.1.0"
+dependencies = [
+ "clap",
 ]
 
 [[package]]
