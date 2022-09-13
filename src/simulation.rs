@@ -1,3 +1,4 @@
+use csv;
 use std::marker::PhantomData;
 
 use crate::{state::BaseState, system::BaseSystem};
@@ -19,7 +20,27 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
         &self,
         runs: u32,
         steps_per_run: u32,
-        _visualize_results: bool,
+        output_path: String,
+    ) -> Result<(), csv::Error> {
+        let results = self._run(runs, steps_per_run);
+        let mut writer = csv::Writer::from_path(output_path)?;
+        for (i, (state, run, step)) in results.iter().enumerate() {
+            let mut record = state.get_serializable_record();
+            record.insert("run", (*run).into());
+            record.insert("step", (*step).into());
+            if i == 0 {
+                writer.write_record(record.keys())?;
+            }
+            writer.write_record(record.values().map(|v| v.to_string()))?;
+        }
+        writer.flush()?;
+        Ok(())
+    }
+
+    fn _run(
+        &self,
+        runs: u32,
+        steps_per_run: u32
     ) -> Vec<(U, u32, u32)> {
         let mut results = Vec::<(U, u32, u32)>::new();
         for run in 0..runs {

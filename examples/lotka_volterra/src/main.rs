@@ -1,6 +1,7 @@
 pub mod system;
 pub mod state;
 
+use std::process;
 use clap::Parser;
 use crate::system::LotkaVolterraSystem;
 use simsim::{simulation::Simulation, cli::Cli};
@@ -15,5 +16,8 @@ fn main() {
         0.01
     );
     let simulation = Simulation::<state::State, LotkaVolterraSystem>::new(system);
-    let _results = simulation.run(args.runs, args.steps_per_run, args.viz_results);
+    if let Err(e) = simulation.run(args.runs, args.steps_per_run, args.output_path) {
+        eprintln!("Application error: {e}");
+        process::exit(1);
+    }
 }
