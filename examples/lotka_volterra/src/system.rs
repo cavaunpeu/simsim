@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use simsim::system::BaseSystem;
 use crate::state::State;
 
@@ -33,5 +35,12 @@ impl BaseSystem<State> for LotkaVolterraSystem {
       population_size: (state.population_size + self.reproduction_rate * state.food_supply).max(0.0),
       food_supply: (state.food_supply - self.consumption_rate * state.population_size).max(0.0)
     }
+  }
+
+  fn get_system_params(&self) -> HashMap<&str, f64> {
+    HashMap::from([
+        ("reproduction_rate", self.reproduction_rate),
+        ("consumption_rate", self.consumption_rate),
+    ])
   }
 }
