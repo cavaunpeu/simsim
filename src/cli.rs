@@ -6,6 +6,6 @@ pub struct Cli {
     pub runs: u32,
     #[clap(long = "steps_per_run")]
     pub steps_per_run: u32,
-    #[clap(long = "output_path")]
-    pub output_path: String,
+    #[clap(long = "output_dir")]
+    pub output_dir: String,
 }

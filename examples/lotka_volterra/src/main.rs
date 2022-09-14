@@ -16,7 +16,7 @@ fn main() {
         0.01
     );
     let simulation = Simulation::<state::State, LotkaVolterraSystem>::new(system);
-    if let Err(e) = simulation.run(args.runs, args.steps_per_run, args.output_path) {
+    if let Err(e) = simulation.run(args.runs, args.steps_per_run, args.output_dir) {
         eprintln!("Application error: {e}");
         process::exit(1);
     }

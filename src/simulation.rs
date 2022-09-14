@@ -1,4 +1,5 @@
 use csv;
+use std::fs;
 use std::marker::PhantomData;
 
 use crate::{state::BaseState, system::BaseSystem};
@@ -20,10 +21,13 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
         &self,
         runs: u32,
         steps_per_run: u32,
-        output_path: String,
+        output_dir: String,
     ) -> Result<(), csv::Error> {
         let results = self._run(runs, steps_per_run);
-        let mut writer = csv::Writer::from_path(output_path)?;
+        fs::create_dir_all(&output_dir)?;
+        let results_path = format!("{}/results.csv", output_dir);
+        let mut writer = csv::Writer::from_path(results_path)?;
+
         if let Some((state, _run, _step)) = results.first() {
             let mut keys = vec!["run", "step"];
             // Get data columns; assumed to be the same for all records.
@@ -40,6 +44,7 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
                 writer.write_record(vals)?;
             }
         }
+
         writer.flush()?;
         Ok(())
     }
