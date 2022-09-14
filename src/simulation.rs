@@ -24,14 +24,21 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
     ) -> Result<(), csv::Error> {
         let results = self._run(runs, steps_per_run);
         let mut writer = csv::Writer::from_path(output_path)?;
-        for (i, (state, run, step)) in results.iter().enumerate() {
-            let mut record = state.get_serializable_record();
-            record.insert("run", (*run).into());
-            record.insert("step", (*step).into());
-            if i == 0 {
-                writer.write_record(record.keys())?;
+        if let Some((state, _run, _step)) = results.first() {
+            let mut keys = vec!["run", "step"];
+            // Get data columns; assumed to be the same for all records.
+            let cols = state.get_serializable_record().keys().cloned().collect::<Vec<&str>>();
+            keys.extend(cols);
+            // Write .csv header.
+            writer.write_record(&keys)?;
+            // Append simulation results.
+            for (state, run, step) in results.iter() {
+                let mut record = state.get_serializable_record();
+                record.insert("run", (*run).into());
+                record.insert("step", (*step).into());
+                let vals = keys.iter().map(|k| record.get(*k).unwrap().to_string());
+                writer.write_record(vals)?;
             }
-            writer.write_record(record.values().map(|v| v.to_string()))?;
         }
         writer.flush()?;
         Ok(())
