@@ -1,4 +1,7 @@
 use csv;
+use serde_json;
+use std::error::Error;
+use std::fs;
 use std::marker::PhantomData;
 
 use crate::{state::BaseState, system::BaseSystem};
@@ -16,14 +19,10 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
         }
     }
 
-    pub fn run(
-        &self,
-        runs: u32,
-        steps_per_run: u32,
-        output_path: String,
-    ) -> Result<(), csv::Error> {
-        let results = self._run(runs, steps_per_run);
-        let mut writer = csv::Writer::from_path(output_path)?;
+    fn write_results_to_csv(&self, results: Vec<(U, u32, u32)>, output_dir: &str) -> Result<(), csv::Error> {
+        let results_path = format!("{}/results.csv", output_dir);
+        let mut writer = csv::Writer::from_path(results_path)?;
+
         if let Some((state, _run, _step)) = results.first() {
             let mut keys = vec!["run", "step"];
             // Get data columns; assumed to be the same for all records.
@@ -40,7 +39,29 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
                 writer.write_record(vals)?;
             }
         }
+
         writer.flush()?;
+        Ok(())
+
+    }
+
+    fn write_params_to_json(&self, output_dir: &str) -> Result<(), Box<dyn Error>> {
+        let params_path = format!("{}/params.json", output_dir);
+        let file = fs::File::create(params_path)?;
+        serde_json::to_writer(file, &self.system.get_system_params())?;
+        Ok(())
+    }
+
+    pub fn run(
+        &self,
+        runs: u32,
+        steps_per_run: u32,
+        output_dir: String,
+    ) -> Result<(), Box<dyn Error>> {
+        let results = self._run(runs, steps_per_run);
+        fs::create_dir_all(&output_dir)?;
+        self.write_results_to_csv(results, &output_dir)?;
+        self.write_params_to_json(&output_dir)?;
         Ok(())
     }
 
