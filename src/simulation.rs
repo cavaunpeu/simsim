@@ -23,7 +23,7 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
 
     pub fn run(&self, runs: u32, steps_per_run: u32, output_dir: String) -> Result<(), Box<dyn Error>> {
         let num_rows = self.configs.len() as u32 * runs * steps_per_run;
-        let mut results= Vec::with_capacity(num_rows as usize);
+        let mut results = Vec::with_capacity(num_rows as usize);
         fs::create_dir_all(&output_dir)?;
         for (i, config) in (&self.configs).iter().enumerate() {
             let run = SingleSimulationRun::<U, T>::from_config(config);

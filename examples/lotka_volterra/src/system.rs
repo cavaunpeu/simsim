@@ -14,10 +14,10 @@ pub struct LotkaVolterraSystem {
 impl BaseSystem<State> for LotkaVolterraSystem {
   fn from_config(config: &HashMap<String, f64>) -> Self {
     LotkaVolterraSystem {
-        population_size: config["population_size"],
-        food_supply: config["food_supply"],
-        reproduction_rate: config["reproduction_rate"],
-        consumption_rate: config["consumption_rate"],
+      population_size: config["population_size"],
+      food_supply: config["food_supply"],
+      reproduction_rate: config["reproduction_rate"],
+      consumption_rate: config["consumption_rate"],
     }
   }
 
