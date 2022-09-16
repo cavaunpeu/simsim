@@ -12,7 +12,7 @@ pub struct LotkaVolterraSystem {
 }
 
 impl BaseSystem<State> for LotkaVolterraSystem {
-  fn from_config(config: HashMap<String, f64>) -> Self {
+  fn from_config(config: &HashMap<String, f64>) -> Self {
     LotkaVolterraSystem {
         population_size: config["population_size"],
         food_supply: config["food_supply"],

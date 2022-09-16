@@ -7,19 +7,38 @@ use std::marker::PhantomData;
 use crate::{state::BaseState, system::BaseSystem};
 
 pub struct Simulation<U: BaseState, T: BaseSystem<U>> {
-    system: T,
-    state: PhantomData<U>,
+    configs: Vec<HashMap<String, f64>>,
+    system: PhantomData<T>,
+    state: PhantomData<U>
 }
 
 impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
-    pub fn new(system: T) -> Self {
+    pub fn from_configs(configs: Vec<HashMap<String, f64>>) -> Self {
         Simulation {
-            system,
+            configs,
+            system: PhantomData {},
             state: PhantomData {},
         }
     }
 
-    fn _write_results_to_csv(&self, results: Vec<(U, u32, u32)>, output_dir: &str) -> Result<(), csv::Error> {
+    pub fn run(&self, runs: u32, steps_per_run: u32, output_dir: String) -> Result<(), Box<dyn Error>> {
+        let num_rows = self.configs.len() as u32 * runs * steps_per_run;
+        let mut results= Vec::with_capacity(num_rows as usize);
+        fs::create_dir_all(&output_dir)?;
+        for (i, config) in (&self.configs).iter().enumerate() {
+            let run = SingleSimulationRun::<U, T>::from_config(config);
+            if i == 0 {
+                let params = (&run).system.get_system_params();
+                self.write_params_to_json(params, &output_dir)?;
+            }
+            let res = run.run(runs, steps_per_run);
+            (&mut results).extend(res);
+        }
+        self.write_results_to_csv(results, &output_dir)?;
+        Ok(())
+    }
+
+    fn write_results_to_csv(&self, results: Vec<(U, u32, u32)>, output_dir: &str) -> Result<(), csv::Error> {
         let results_path = format!("{}/results.csv", output_dir);
         let mut writer = csv::Writer::from_path(results_path)?;
 
@@ -45,14 +64,28 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
 
     }
 
-    fn _write_params_to_json(&self, params: HashMap<&str, f64>, output_dir: &str) -> Result<(), Box<dyn Error>> {
+    fn write_params_to_json(&self, params: HashMap<&str, f64>, output_dir: &str) -> Result<(), Box<dyn Error>> {
         let params_path = format!("{}/params.json", output_dir);
         let file = fs::File::create(params_path)?;
         serde_json::to_writer(file, &params)?;
         Ok(())
     }
+}
 
-    pub fn run(
+struct SingleSimulationRun<U: BaseState, T: BaseSystem<U>> {
+    system: T,
+    state: PhantomData<U>
+}
+
+impl<U: BaseState, T: BaseSystem<U>> SingleSimulationRun<U, T> {
+    fn from_config(config: &HashMap<String, f64>) -> Self {
+        SingleSimulationRun {
+            system: T::from_config(config),
+            state: PhantomData {}
+        }
+    }
+
+    fn run(
         &self,
         runs: u32,
         steps_per_run: u32
@@ -76,3 +109,17 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
         results
     }
 }
+
+
+
+// if let Ok(configs) = load_configs(args.configs_path) {
+//     let num_rows = configs.len() as u32 * args.runs * args.steps_per_run;
+//     let mut results = Vec::with_capacity(num_rows as usize);
+//     for config in configs {
+//         let system = system::LotkaVolterraSystem::from_config(config);
+//         let params = system.get_system_params();
+//         let simulation = Simulation::<state::State, LotkaVolterraSystem>::new(system);
+//         let res = simulation.run(args.runs, args.steps_per_run);
+//         (&mut results).extend(res);
+//     }
+// }
