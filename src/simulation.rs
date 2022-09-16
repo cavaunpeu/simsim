@@ -1,22 +1,41 @@
 use csv;
 use serde_json;
-use std::error::Error;
+use std::{error::Error, collections::HashMap};
 use std::fs;
 use std::marker::PhantomData;
 
 use crate::{state::BaseState, system::BaseSystem};
 
 pub struct Simulation<U: BaseState, T: BaseSystem<U>> {
-    system: T,
-    state: PhantomData<U>,
+    configs: Vec<HashMap<String, f64>>,
+    system: PhantomData<T>,
+    state: PhantomData<U>
 }
 
 impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
-    pub fn new(system: T) -> Self {
+    pub fn from_configs(configs: Vec<HashMap<String, f64>>) -> Self {
         Simulation {
-            system,
+            configs,
+            system: PhantomData {},
             state: PhantomData {},
         }
+    }
+
+    pub fn run(&self, runs: u32, steps_per_run: u32, output_dir: String) -> Result<(), Box<dyn Error>> {
+        let num_rows = self.configs.len() as u32 * runs * steps_per_run;
+        let mut results = Vec::with_capacity(num_rows as usize);
+        fs::create_dir_all(&output_dir)?;
+        for (i, config) in (&self.configs).iter().enumerate() {
+            let run = SingleSimulationRun::<U, T>::from_config(config);
+            if i == 0 {
+                let params = (&run).system.get_system_params();
+                self.write_params_to_json(params, &output_dir)?;
+            }
+            let res = run.run(runs, steps_per_run);
+            (&mut results).extend(res);
+        }
+        self.write_results_to_csv(results, &output_dir)?;
+        Ok(())
     }
 
     fn write_results_to_csv(&self, results: Vec<(U, u32, u32)>, output_dir: &str) -> Result<(), csv::Error> {
@@ -45,27 +64,28 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
 
     }
 
-    fn write_params_to_json(&self, output_dir: &str) -> Result<(), Box<dyn Error>> {
+    fn write_params_to_json(&self, params: HashMap<&str, f64>, output_dir: &str) -> Result<(), Box<dyn Error>> {
         let params_path = format!("{}/params.json", output_dir);
         let file = fs::File::create(params_path)?;
-        serde_json::to_writer(file, &self.system.get_system_params())?;
+        serde_json::to_writer(file, &params)?;
         Ok(())
     }
+}
 
-    pub fn run(
-        &self,
-        runs: u32,
-        steps_per_run: u32,
-        output_dir: String,
-    ) -> Result<(), Box<dyn Error>> {
-        let results = self._run(runs, steps_per_run);
-        fs::create_dir_all(&output_dir)?;
-        self.write_results_to_csv(results, &output_dir)?;
-        self.write_params_to_json(&output_dir)?;
-        Ok(())
+struct SingleSimulationRun<U: BaseState, T: BaseSystem<U>> {
+    system: T,
+    state: PhantomData<U>
+}
+
+impl<U: BaseState, T: BaseSystem<U>> SingleSimulationRun<U, T> {
+    fn from_config(config: &HashMap<String, f64>) -> Self {
+        SingleSimulationRun {
+            system: T::from_config(config),
+            state: PhantomData {}
+        }
     }
 
-    fn _run(
+    fn run(
         &self,
         runs: u32,
         steps_per_run: u32

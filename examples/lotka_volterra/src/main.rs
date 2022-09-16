@@ -1,23 +1,15 @@
 pub mod system;
 pub mod state;
 
-use std::process;
 use clap::Parser;
-use crate::system::LotkaVolterraSystem;
-use simsim::{simulation::Simulation, cli::Cli};
+use std::error::Error;
+use simsim::{cli::Cli, util::load_configs, simulation::Simulation};
 
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
-    let system = system::LotkaVolterraSystem::new(
-        50.0,
-        1000.0,
-        0.01,
-        0.01
-    );
-    let simulation = Simulation::<state::State, LotkaVolterraSystem>::new(system);
-    if let Err(e) = simulation.run(args.runs, args.steps_per_run, args.output_dir) {
-        eprintln!("Application error: {e}");
-        process::exit(1);
-    }
+    let configs = load_configs(args.configs_path)?;
+    let simulation = Simulation::<state::State, system::LotkaVolterraSystem>::from_configs(configs);
+    simulation.run(args.runs, args.steps_per_run, args.output_dir)?;
+    Ok(())
 }

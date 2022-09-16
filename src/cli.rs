@@ -8,4 +8,6 @@ pub struct Cli {
     pub steps_per_run: u32,
     #[clap(long = "output_dir")]
     pub output_dir: String,
+    #[clap(long = "configs_path")]
+    pub configs_path: String,
 }
