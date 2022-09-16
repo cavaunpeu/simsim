@@ -109,17 +109,3 @@ impl<U: BaseState, T: BaseSystem<U>> SingleSimulationRun<U, T> {
         results
     }
 }
-
-
-
-// if let Ok(configs) = load_configs(args.configs_path) {
-//     let num_rows = configs.len() as u32 * args.runs * args.steps_per_run;
-//     let mut results = Vec::with_capacity(num_rows as usize);
-//     for config in configs {
-//         let system = system::LotkaVolterraSystem::from_config(config);
-//         let params = system.get_system_params();
-//         let simulation = Simulation::<state::State, LotkaVolterraSystem>::new(system);
-//         let res = simulation.run(args.runs, args.steps_per_run);
-//         (&mut results).extend(res);
-//     }
-// }
