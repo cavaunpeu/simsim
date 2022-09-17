@@ -1,5 +1,4 @@
 use csv;
-use serde_json;
 use std::{error::Error, collections::HashMap};
 use std::fs;
 use std::marker::PhantomData;
@@ -24,24 +23,42 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
     pub fn run(&self, runs: u32, steps_per_run: u32, output_dir: String) -> Result<(), Box<dyn Error>> {
         let num_rows = self.configs.len() as u32 * runs * steps_per_run;
         let mut results = Vec::with_capacity(num_rows as usize);
+        let mut params = Vec::with_capacity(self.configs.len());
         fs::create_dir_all(&output_dir)?;
         for (i, config) in (&self.configs).iter().enumerate() {
             let run = SingleSimulationRun::<U, T>::from_config(config);
-            if i == 0 {
-                let params = (&run).system.get_system_params();
-                self.write_params_to_json(params, &output_dir)?;
-            }
             let res = run.run(runs, steps_per_run);
-            (&mut results).extend(res);
+            let mut prm = run.system.get_params();
+            prm.insert("config_idx", i as f64);
+            params.push(prm);
+            results.extend(res);
         }
         self.write_results_to_csv(results, &output_dir)?;
+        self.write_params_to_csv(params, &output_dir)?;
+        Ok(())
+    }
+
+    fn write_params_to_csv(&self, params: Vec<HashMap<&str, f64>>, output_dir: &str) -> Result<(), csv::Error> {
+        if let Some(prm) = params.first() {
+            let params_path = format!("{}/params.csv", output_dir);
+            let mut writer = csv::Writer::from_path(params_path)?;
+            // Get param columns; assumed to be the same for all config.
+            let keys = prm.keys().cloned().collect::<Vec<&str>>();
+            // Write .csv header.
+            writer.write_record(&keys)?;
+            // Append config params.
+            for prm in params.iter() {
+                let vals = keys.iter().map(|k| prm.get(*k).unwrap().to_string());
+                writer.write_record(vals)?;
+            }
+            writer.flush()?;
+        }
         Ok(())
     }
 
     fn write_results_to_csv(&self, results: Vec<(U, u32, u32)>, output_dir: &str) -> Result<(), csv::Error> {
         let results_path = format!("{}/results.csv", output_dir);
         let mut writer = csv::Writer::from_path(results_path)?;
-
         if let Some((state, _run, _step)) = results.first() {
             let mut keys = vec!["run", "step"];
             // Get data columns; assumed to be the same for all records.
@@ -58,16 +75,7 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
                 writer.write_record(vals)?;
             }
         }
-
         writer.flush()?;
-        Ok(())
-
-    }
-
-    fn write_params_to_json(&self, params: HashMap<&str, f64>, output_dir: &str) -> Result<(), Box<dyn Error>> {
-        let params_path = format!("{}/params.json", output_dir);
-        let file = fs::File::create(params_path)?;
-        serde_json::to_writer(file, &params)?;
         Ok(())
     }
 }
