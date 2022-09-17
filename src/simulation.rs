@@ -59,9 +59,9 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
     }
 
     fn write_results_to_csv(&self, results: Vec<(U, u32, u32)>, output_dir: &str) -> Result<(), csv::Error> {
-        let results_path = format!("{}/results.csv", output_dir);
-        let mut writer = csv::Writer::from_path(results_path)?;
         if let Some((state, _run, _step)) = results.first() {
+            let results_path = format!("{}/results.csv", output_dir);
+            let mut writer = csv::Writer::from_path(results_path)?;
             let mut keys = vec!["run", "step"];
             // Get data columns; assumed to be the same for all records.
             let cols = state.get_serializable_record().keys().cloned().collect::<Vec<&str>>();
@@ -76,8 +76,8 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
                 let vals = keys.iter().map(|k| record.get(*k).unwrap().to_string());
                 writer.write_record(vals)?;
             }
+            writer.flush()?;
         }
-        writer.flush()?;
         Ok(())
     }
 }
