@@ -63,7 +63,7 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
             let results_path = format!("{}/results.csv", output_dir);
             let mut writer = csv::Writer::from_path(results_path)?;
             let mut keys = vec!["run", "step"];
-            // Get data columns; assumed to be the same for all records.
+            // Get data keys; assumed to be the same for all records.
             let cols = state.get_serializable_record().keys().cloned().collect::<Vec<&str>>();
             keys.extend(cols);
             // Write .csv header.
