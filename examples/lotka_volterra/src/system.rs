@@ -35,7 +35,7 @@ impl BaseSystem<State> for LotkaVolterraSystem {
     }
   }
 
-  fn get_params(&self) -> HashMap<String, f64> {
+  fn get_params(&self) -> HashMap<&'static str, f64> {
     HashMap::from([
         ("reproduction_rate", self.reproduction_rate),
         ("consumption_rate", self.consumption_rate),
