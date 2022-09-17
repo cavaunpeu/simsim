@@ -25,12 +25,11 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
         let mut results = Vec::with_capacity(num_rows as usize);
         let mut params = Vec::with_capacity(self.configs.len());
         fs::create_dir_all(&output_dir)?;
-        for (i, config) in (&self.configs).iter().enumerate() {
+        for (idx, config) in (&self.configs).iter().enumerate() {
             let run = SingleSimulationRun::<U, T>::from_config(config);
             let res = run.run(runs, steps_per_run);
-            let mut prm = run.system.get_params();
-            prm.insert("config_idx", i as f64);
-            params.push(prm);
+            let prm = run.system.get_params();
+            params.push((idx, prm));
             results.extend(res);
         }
         self.write_results_to_csv(results, &output_dir)?;
@@ -38,16 +37,19 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
         Ok(())
     }
 
-    fn write_params_to_csv(&self, params: Vec<HashMap<&str, f64>>, output_dir: &str) -> Result<(), csv::Error> {
-        if let Some(prm) = params.first() {
+    fn write_params_to_csv(&self, mut params: Vec<(usize, HashMap<&str, f64>)>, output_dir: &str) -> Result<(), csv::Error> {
+        if let Some((_idx, prm)) = params.first() {
             let params_path = format!("{}/params.csv", output_dir);
             let mut writer = csv::Writer::from_path(params_path)?;
+            let mut keys = vec!["config_idx"];
             // Get param columns; assumed to be the same for all config.
-            let keys = prm.keys().cloned().collect::<Vec<&str>>();
+            let cols = prm.keys().cloned().collect::<Vec<&str>>();
+            keys.extend(cols);
             // Write .csv header.
             writer.write_record(&keys)?;
             // Append config params.
-            for prm in params.iter() {
+            for (idx, prm) in params.iter_mut() {
+                prm.insert("config_idx", *idx as f64);
                 let vals = keys.iter().map(|k| prm.get(*k).unwrap().to_string());
                 writer.write_record(vals)?;
             }
