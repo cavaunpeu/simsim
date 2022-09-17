@@ -42,7 +42,7 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
             let params_path = format!("{}/params.csv", output_dir);
             let mut writer = csv::Writer::from_path(params_path)?;
             let mut keys = vec!["config_idx"];
-            // Get param columns; assumed to be the same for all config.
+            // Get param keys; assumed to be the same for all configs.
             let cols = prm.keys().cloned().collect::<Vec<&str>>();
             keys.extend(cols);
             // Write .csv header.
