@@ -44,7 +44,7 @@ impl BaseSystem<State> for LorenzSystem {
     }
   }
 
-  fn get_system_params(&self) -> HashMap<&str, f64> {
+  fn get_params(&self) -> HashMap<&'static str, f64> {
     HashMap::from([
         ("sigma", self.sigma),
         ("beta", self.beta),

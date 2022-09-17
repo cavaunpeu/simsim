@@ -9,5 +9,5 @@ pub trait BaseSystem<T: BaseState> {
 
     fn step(&self, state: &T, history: &Vec<T>) -> T;
 
-    fn get_system_params(&self) -> HashMap<&str, f64>;
+    fn get_params(&self) -> HashMap<&'static str, f64>;
 }
