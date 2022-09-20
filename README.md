@@ -50,7 +50,7 @@ Simply, we recommend duplicating the full Lotka-Volterra [example](https://githu
 
 Additionally, if you are working from a fresh repository, you can specify the `simsim` dependency in your `Cargo.toml` as such:
 
-```
+```toml
 [dependencies]
 simsim = { git="https://github.com/cavaunpeu/simsim.git" }
 ```
