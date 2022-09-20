@@ -26,7 +26,7 @@ impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
         let mut params = Vec::with_capacity(self.configs.len());
         fs::create_dir_all(&output_dir)?;
         for (idx, config) in (&self.configs).iter().enumerate() {
-            let run = SingleSimulationRun::<U, T>::from_config(config);
+            let mut run = SingleSimulationRun::<U, T>::from_config(config);
             let res = run.run(runs, steps_per_run);
             let prm = run.system.get_params();
             params.push((idx, prm));
@@ -96,7 +96,7 @@ impl<U: BaseState, T: BaseSystem<U>> SingleSimulationRun<U, T> {
     }
 
     fn run(
-        &self,
+        &mut self,
         runs: u32,
         steps_per_run: u32
     ) -> Vec<(U, u32, u32)> {

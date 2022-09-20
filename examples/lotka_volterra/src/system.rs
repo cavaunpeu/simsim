@@ -21,14 +21,14 @@ impl BaseSystem<State> for LotkaVolterraSystem {
     }
   }
 
-  fn initial_step(&self) -> State {
+  fn initial_step(&mut self) -> State {
     State {
       population_size: self.population_size,
       food_supply: self.food_supply,
     }
   }
 
-  fn step(&self, state: &State, _history: &Vec<State>) -> State {
+  fn step(&mut self, state: &State, _history: &Vec<State>) -> State {
     State {
       population_size: (state.population_size + self.reproduction_rate * state.food_supply).max(0.0),
       food_supply: (state.food_supply - self.consumption_rate * state.population_size).max(0.0)
