@@ -1,4 +1,4 @@
-# simsim
+# simsim 🎲
 
 ## What is simsim?
 
