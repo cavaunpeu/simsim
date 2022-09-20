@@ -25,7 +25,7 @@ impl BaseSystem<State> for LorenzSystem {
     }
   }
 
-  fn initial_step(&self) -> State {
+  fn initial_step(&mut self) -> State {
     State {
       x: self.x,
       y: self.y,
@@ -33,7 +33,7 @@ impl BaseSystem<State> for LorenzSystem {
     }
   }
 
-  fn step(&self, state: &State, _history: &Vec<State>) -> State {
+  fn step(&mut self, state: &State, _history: &Vec<State>) -> State {
     let dx = self.sigma * (state.y - state.x);
     let dy = state.x * (self.rho - state.z) - state.y;
     let dz = state.x * state.y - self.beta * state.z;
