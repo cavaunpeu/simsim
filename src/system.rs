@@ -1,9 +1,10 @@
 use std::collections::HashMap;
+use serde_json::{Value, Map};
 
 use crate::state::BaseState;
 
 pub trait BaseSystem<T: BaseState> {
-    fn from_config(config: &HashMap<String, f64>) -> Self;
+    fn from_config(config: &Map<String, Value>) -> Self;
 
     fn initial_step(&mut self) -> T;
 
