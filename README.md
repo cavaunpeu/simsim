@@ -2,7 +2,7 @@
 
 ## What is simsim?
 
-simsim is a framework for (sim)ple (sim)ulation of generalized, discrete-time dynamical systems. A user implements a system, a state transition function, and a specification of the data they'd like to record, and simsim runs this simulation—and structures its results—in a straightforward manner.
+simsim is a framework for (sim)ple (sim)ulation of generalized, discrete-time dynamical systems written in pure Rust. A user implements a system, a state transition function, and a specification of the data they'd like to record, and simsim runs this simulation—and structures its results—in a straightforward manner.
 
 ## How do I implement a simulation?
 
