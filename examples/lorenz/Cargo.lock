@@ -158,6 +158,7 @@ name = "lorenz"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "serde_json",
  "simsim",
 ]
 

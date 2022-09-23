@@ -1,4 +1,5 @@
 use csv;
+use serde_json::{Value, Map};
 use std::{error::Error, collections::HashMap};
 use std::fs;
 use std::marker::PhantomData;
@@ -6,13 +7,13 @@ use std::marker::PhantomData;
 use crate::{state::BaseState, system::BaseSystem};
 
 pub struct Simulation<U: BaseState, T: BaseSystem<U>> {
-    configs: Vec<HashMap<String, f64>>,
+    configs: Vec<Map<String, Value>>,
     system: PhantomData<T>,
     state: PhantomData<U>
 }
 
 impl<U: BaseState, T: BaseSystem<U>> Simulation<U, T> {
-    pub fn from_configs(configs: Vec<HashMap<String, f64>>) -> Self {
+    pub fn from_configs(configs: Vec<Map<String, Value>>) -> Self {
         Simulation {
             configs,
             system: PhantomData {},
@@ -96,7 +97,7 @@ struct SingleSimulationRun<U: BaseState, T: BaseSystem<U>> {
 }
 
 impl<U: BaseState, T: BaseSystem<U>> SingleSimulationRun<U, T> {
-    fn from_config(config: &HashMap<String, f64>) -> Self {
+    fn from_config(config: &Map<String, Value>) -> Self {
         SingleSimulationRun {
             system: T::from_config(config),
             state: PhantomData {}

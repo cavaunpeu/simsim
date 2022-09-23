@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde_json::{Value, Map};
 
 use simsim::system::BaseSystem;
 use crate::state::State;
@@ -14,14 +15,14 @@ pub struct LorenzSystem {
 }
 
 impl BaseSystem<State> for LorenzSystem {
-  fn from_config(config: &HashMap<String, f64>) -> Self {
+  fn from_config(config: &Map<String, Value>) -> Self {
     LorenzSystem {
-      x: config["x"],
-      y: config["y"],
-      z: config["z"],
-      sigma: config["sigma"],
-      rho: config["rho"],
-      beta: config["beta"],
+      x: config["x"].as_f64().unwrap(),
+      y: config["y"].as_f64().unwrap(),
+      z: config["z"].as_f64().unwrap(),
+      sigma: config["sigma"].as_f64().unwrap(),
+      rho: config["rho"].as_f64().unwrap(),
+      beta: config["beta"].as_f64().unwrap(),
     }
   }
 
