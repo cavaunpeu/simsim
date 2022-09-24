@@ -1,4 +1,3 @@
-use csv;
 use serde::Serialize;
 use serde_json::{Value, Map};
 use std::{error::Error, collections::HashMap};
@@ -13,6 +12,12 @@ pub struct Record<T: Serialize> {
     run: u32,
     step: u32,
     state: T
+}
+
+#[derive(Serialize)]
+pub struct Params {
+    config_idx: u32,
+    params: HashMap<&'static str, f64>
 }
 
 pub struct Simulation<U: Serialize, T: BaseSystem<U>> {
@@ -33,23 +38,24 @@ impl<U: Serialize, T: BaseSystem<U>> Simulation<U, T> {
     pub fn run(&self, runs: u32, steps_per_run: u32, output_dir: String) -> Result<(), Box<dyn Error>> {
         let num_rows = self.configs.len() as u32 * runs * steps_per_run;
         let mut results = Vec::<Record<U>>::with_capacity(num_rows as usize);
-        let mut params = Vec::with_capacity(self.configs.len());
+        let mut params = Vec::<Params>::with_capacity(self.configs.len());
         fs::create_dir_all(&output_dir)?;
         for (config_idx, config) in (0u32..).zip(&self.configs) {
             for run in 0..runs {
                 let mut sim = SingleSimulationRun::<U, T>::from_config(config);
+                if run == 0 {
+                    params.push(Params { config_idx, params: sim.system.get_params() });
+                }
                 results.extend(
                     sim.run(steps_per_run)
                     .into_iter()
                     .map(|(state, step)| Record { config_idx, run, step, state })
                     .collect::<Vec<_>>()
                 );
-                let prm = sim.system.get_params();
-                params.push((config_idx, prm));
             }
         }
         self.write_results_to_json(results, &output_dir)?;
-        self.write_params_to_csv(params, &output_dir)?;
+        self.write_params_to_json(params, &output_dir)?;
         Ok(())
     }
 
@@ -60,24 +66,10 @@ impl<U: Serialize, T: BaseSystem<U>> Simulation<U, T> {
         Ok(())
     }
 
-    fn write_params_to_csv(&self, mut params: Vec<(u32, HashMap<&str, f64>)>, output_dir: &str) -> Result<(), csv::Error> {
-        if let Some((_idx, prm)) = params.first() {
-            let params_path = format!("{}/params.csv", output_dir);
-            let mut writer = csv::Writer::from_path(params_path)?;
-            let mut keys = vec!["config_idx"];
-            // Get param keys; assumed to be the same for all configs.
-            let cols = prm.keys().cloned().collect::<Vec<&str>>();
-            keys.extend(cols);
-            // Write .csv header.
-            writer.write_record(&keys)?;
-            // Append config params.
-            for (idx, prm) in params.iter_mut() {
-                prm.insert("config_idx", *idx as f64);
-                let vals = keys.iter().map(|k| prm.get(*k).unwrap().to_string());
-                writer.write_record(vals)?;
-            }
-            writer.flush()?;
-        }
+    fn write_params_to_json(&self, params: Vec<Params>, output_dir: &str) -> Result<(), Box<dyn Error>> {
+        let path = format!("{}/params.json", output_dir);
+        let file = fs::File::create(path)?;
+        serde_json::to_writer_pretty(file, &params)?;
         Ok(())
     }
 }
