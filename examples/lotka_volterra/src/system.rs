@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use serde_json::{Value, Map};
 
 use simsim::system::BaseSystem;
-use crate::state::State;
+use crate::io::{Config, State};
 
 
 pub struct LotkaVolterraSystem {
@@ -12,13 +11,13 @@ pub struct LotkaVolterraSystem {
   consumption_rate: f64,
 }
 
-impl BaseSystem<State> for LotkaVolterraSystem {
-  fn from_config(config: &Map<String, Value>) -> Self {
+impl BaseSystem<Config, State> for LotkaVolterraSystem {
+  fn from_config(config: &Config) -> Self {
     LotkaVolterraSystem {
-      population_size: config["population_size"].as_f64().unwrap(),
-      food_supply: config["food_supply"].as_f64().unwrap(),
-      reproduction_rate: config["reproduction_rate"].as_f64().unwrap(),
-      consumption_rate: config["consumption_rate"].as_f64().unwrap(),
+      population_size: config.population_size,
+      food_supply: config.food_supply,
+      reproduction_rate: config.reproduction_rate,
+      consumption_rate: config.consumption_rate,
     }
   }
 

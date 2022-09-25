@@ -1,17 +1,14 @@
-{
-  "configs": [
-    {
-      "population_size": 50.0,
-      "food_supply": 1000.0,
-      "reproduction_rate": 0.01,
-      "consumption_rate": 0.01
-    },
-    {
-      "population_size": 40.0,
-      "food_supply": 800.0,
-      "reproduction_rate": 0.05,
-      "consumption_rate": 0.05
-    }
-  ]
-}
-
+[
+  {
+    "population_size": 50.0,
+    "food_supply": 1000.0,
+    "reproduction_rate": 0.01,
+    "consumption_rate": 0.01
+  },
+  {
+    "population_size": 40.0,
+    "food_supply": 800.0,
+    "reproduction_rate": 0.05,
+    "consumption_rate": 0.05
+  }
+]
