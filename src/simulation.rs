@@ -19,13 +19,13 @@ pub struct Params {
     params: HashMap<&'static str, f64>
 }
 
-pub struct Simulation<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> {
+pub struct Simulation<I: for<'de> Deserialize<'de>, O: Serialize, S: BaseSystem<I, O>> {
     configs: Vec<I>,
     system: PhantomData<S>,
     state: PhantomData<O>
 }
 
-impl<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> Simulation<I, O, S> {
+impl<I: for<'de> Deserialize<'de>, O: Serialize, S: BaseSystem<I, O>> Simulation<I, O, S> {
     pub fn from_configs_path(path: String) -> Self {
         let data = fs::read_to_string(&path).expect(&format!("{} not found", &path));
         let configs: Vec<I> = serde_json::from_str(&data).expect("Could not read JSON");
@@ -75,13 +75,13 @@ impl<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> Simulation<I
     }
 }
 
-struct SingleSimulationRun<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> {
+struct SingleSimulationRun<I: for<'de> Deserialize<'de>, O: Serialize, S: BaseSystem<I, O>> {
     system: S,
     state: PhantomData<O>,
     config: PhantomData<I>
 }
 
-impl<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> SingleSimulationRun<I, O, S> {
+impl<I: for<'de> Deserialize<'de>, O: Serialize, S: BaseSystem<I, O>> SingleSimulationRun<I, O, S> {
     fn from_config(config: &I) -> Self {
         SingleSimulationRun {
             system: S::from_config(config),

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
-pub trait BaseSystem<I: for<'a> Deserialize<'a>, O: Serialize> {
+pub trait BaseSystem<I: for<'de> Deserialize<'de>, O: Serialize> {
     fn from_config(config: &I) -> Self;
 
     fn initial_step(&mut self) -> O;
