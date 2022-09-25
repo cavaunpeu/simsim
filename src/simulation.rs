@@ -1,5 +1,4 @@
-use serde::Serialize;
-use serde_json::{Value, Map};
+use serde::{Deserialize, Serialize};
 use std::{error::Error, collections::HashMap};
 use std::fs;
 use std::marker::PhantomData;
@@ -20,14 +19,16 @@ pub struct Params {
     params: HashMap<&'static str, f64>
 }
 
-pub struct Simulation<U: Serialize, T: BaseSystem<U>> {
-    configs: Vec<Map<String, Value>>,
-    system: PhantomData<T>,
-    state: PhantomData<U>
+pub struct Simulation<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> {
+    configs: Vec<I>,
+    system: PhantomData<S>,
+    state: PhantomData<O>
 }
 
-impl<U: Serialize, T: BaseSystem<U>> Simulation<U, T> {
-    pub fn from_configs(configs: Vec<Map<String, Value>>) -> Self {
+impl<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> Simulation<I, O, S> {
+    pub fn from_configs_path(path: String) -> Self {
+        let data = fs::read_to_string(&path).expect(&format!("{} not found", &path));
+        let configs: Vec<I> = serde_json::from_str(&data).expect("Could not read JSON");
         Simulation {
             configs,
             system: PhantomData {},
@@ -37,12 +38,12 @@ impl<U: Serialize, T: BaseSystem<U>> Simulation<U, T> {
 
     pub fn run(&self, runs: u32, steps_per_run: u32, output_dir: String) -> Result<(), Box<dyn Error>> {
         let num_rows = self.configs.len() as u32 * runs * steps_per_run;
-        let mut results = Vec::<Record<U>>::with_capacity(num_rows as usize);
+        let mut results = Vec::<Record<O>>::with_capacity(num_rows as usize);
         let mut params = Vec::<Params>::with_capacity(self.configs.len());
         fs::create_dir_all(&output_dir)?;
         for (config_idx, config) in (0u32..).zip(&self.configs) {
             for run in 0..runs {
-                let mut sim = SingleSimulationRun::<U, T>::from_config(config);
+                let mut sim = SingleSimulationRun::<I, O, S>::from_config(config);
                 if run == 0 {
                     params.push(Params { config_idx, params: sim.system.get_params() });
                 }
@@ -59,7 +60,7 @@ impl<U: Serialize, T: BaseSystem<U>> Simulation<U, T> {
         Ok(())
     }
 
-    fn write_results_to_json(&self, results: Vec<Record<U>>, output_dir: &str) -> Result<(), Box<dyn Error>> {
+    fn write_results_to_json(&self, results: Vec<Record<O>>, output_dir: &str) -> Result<(), Box<dyn Error>> {
         let path = format!("{}/results.json", output_dir);
         let file = fs::File::create(path)?;
         serde_json::to_writer_pretty(file, &results)?;
@@ -74,25 +75,27 @@ impl<U: Serialize, T: BaseSystem<U>> Simulation<U, T> {
     }
 }
 
-struct SingleSimulationRun<U: Serialize, T: BaseSystem<U>> {
-    system: T,
-    state: PhantomData<U>
+struct SingleSimulationRun<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> {
+    system: S,
+    state: PhantomData<O>,
+    config: PhantomData<I>
 }
 
-impl<U: Serialize, T: BaseSystem<U>> SingleSimulationRun<U, T> {
-    fn from_config(config: &Map<String, Value>) -> Self {
+impl<I: for<'a> Deserialize<'a>, O: Serialize, S: BaseSystem<I, O>> SingleSimulationRun<I, O, S> {
+    fn from_config(config: &I) -> Self {
         SingleSimulationRun {
-            system: T::from_config(config),
-            state: PhantomData {}
+            system: S::from_config(config),
+            state: PhantomData {},
+            config: PhantomData {}
         }
     }
 
     fn run(
         &mut self,
         steps_per_run: u32
-    ) -> Vec<(U, u32)> {
-        let mut results = Vec::<(U, u32)>::new();
-        let mut history = Vec::<U>::new();
+    ) -> Vec<(O, u32)> {
+        let mut results = Vec::<(O, u32)>::new();
+        let mut history = Vec::<O>::new();
         let mut steps = Vec::<u32>::new();
         for step in 0..steps_per_run {
             let state = match step {
