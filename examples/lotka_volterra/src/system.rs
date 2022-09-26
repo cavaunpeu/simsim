@@ -5,8 +5,8 @@ use crate::io::{Config, State};
 
 
 pub struct LotkaVolterraSystem {
-  population_size: f64,
-  food_supply: f64,
+  pub population_size: f64,
+  pub food_supply: f64,
   reproduction_rate: f64,
   consumption_rate: f64,
 }
@@ -28,11 +28,10 @@ impl BaseSystem<Config, State> for LotkaVolterraSystem {
     }
   }
 
-  fn step(&mut self, state: &State, _history: &Vec<State>) -> State {
-    State {
-      population_size: (state.population_size + self.reproduction_rate * state.food_supply).max(0.0),
-      food_supply: (state.food_supply - self.consumption_rate * state.population_size).max(0.0)
-    }
+  fn step(&mut self, _state: &State, _history: &Vec<State>) -> State {
+    self.population_size = (self.population_size + self.reproduction_rate * self.food_supply).max(0.0);
+    self.food_supply = (self.food_supply - self.consumption_rate * self.population_size).max(0.0);
+    State::from(self)
   }
 
   fn get_params(&self) -> HashMap<&'static str, f64> {

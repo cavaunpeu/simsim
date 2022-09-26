@@ -5,9 +5,9 @@ use crate::io::{Config, State};
 
 
 pub struct LorenzSystem {
-  x: f64,
-  y: f64,
-  z: f64,
+  pub x: f64,
+  pub y: f64,
+  pub z: f64,
   sigma: f64,
   rho: f64,
   beta: f64,
@@ -33,15 +33,14 @@ impl BaseSystem<Config, State> for LorenzSystem {
     }
   }
 
-  fn step(&mut self, state: &State, _history: &Vec<State>) -> State {
-    let dx = self.sigma * (state.y - state.x);
-    let dy = state.x * (self.rho - state.z) - state.y;
-    let dz = state.x * state.y - self.beta * state.z;
-    State {
-      x: state.x + dx,
-      y: state.y + dy,
-      z: state.z + dz,
-    }
+  fn step(&mut self, _state: &State, _history: &Vec<State>) -> State {
+    let dx = self.sigma * (self.y - self.x);
+    let dy = self.x * (self.rho - self.z) - self.y;
+    let dz = self.x * self.y - self.beta * self.z;
+    self.x += dx;
+    self.y += dy;
+    self.z += dz;
+    State::from(self)
   }
 
   fn get_params(&self) -> HashMap<&'static str, f64> {
