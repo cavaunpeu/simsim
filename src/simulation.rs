@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::io::{BufWriter, Write};
 use std::{error::Error, collections::HashMap};
 use std::fs;
 use std::marker::PhantomData;
@@ -69,14 +70,18 @@ impl<I: for<'de> Deserialize<'de>, O: Serialize, S: BaseSystem<I, O>> Simulation
     fn write_results_to_json(&self, results: Vec<Record<O>>, output_dir: &str) -> Result<(), Box<dyn Error>> {
         let path = format!("{}/results.json", output_dir);
         let file = fs::File::create(path)?;
-        serde_json::to_writer_pretty(file, &results)?;
+        let mut writer = BufWriter::new(file);
+        serde_json::to_writer_pretty(&mut writer, &results)?;
+        writer.flush().expect("Writer failed to flush");
         Ok(())
     }
 
     fn write_params_to_json(&self, params: Vec<Params>, output_dir: &str) -> Result<(), Box<dyn Error>> {
         let path = format!("{}/params.json", output_dir);
         let file = fs::File::create(path)?;
-        serde_json::to_writer_pretty(file, &params)?;
+        let mut writer = BufWriter::new(file);
+        serde_json::to_writer_pretty(&mut writer, &params)?;
+        writer.flush().expect("Writer failed to flush");
         Ok(())
     }
 }
