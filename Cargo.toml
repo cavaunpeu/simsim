@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 clap = { version = "3.0", features = ["derive"] }
 csv = "1.1.6"
+kdam = "0.2.7"
 serde = "1.0.145"
 serde_json = "1.0.85"

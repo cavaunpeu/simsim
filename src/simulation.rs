@@ -3,6 +3,8 @@ use std::{error::Error, collections::HashMap};
 use std::fs;
 use std::marker::PhantomData;
 
+use kdam::{tqdm, BarExt};
+
 use crate::system::BaseSystem;
 
 #[derive(Serialize)]
@@ -37,9 +39,11 @@ impl<I: for<'de> Deserialize<'de>, O: Serialize, S: BaseSystem<I, O>> Simulation
     }
 
     pub fn run(&self, runs: u32, steps_per_run: u32, output_dir: String) -> Result<(), Box<dyn Error>> {
-        let num_rows = self.configs.len() as u32 * runs * steps_per_run;
-        let mut results = Vec::<Record<O>>::with_capacity(num_rows as usize);
+        let num_runs = self.configs.len() * runs as usize;
+        let num_rows = num_runs * steps_per_run as usize;
+        let mut results = Vec::<Record<O>>::with_capacity(num_rows);
         let mut params = Vec::<Params>::with_capacity(self.configs.len());
+        let mut pb = tqdm!(total = num_runs);
         fs::create_dir_all(&output_dir)?;
         for (config_idx, config) in (0u32..).zip(&self.configs) {
             for run in 0..runs {
@@ -53,8 +57,10 @@ impl<I: for<'de> Deserialize<'de>, O: Serialize, S: BaseSystem<I, O>> Simulation
                     .map(|(state, step)| Record { config_idx, run, step, state })
                     .collect::<Vec<_>>()
                 );
+                pb.update(1);
             }
         }
+        println!("Writing results of {} runs to disk...", num_runs);
         self.write_results_to_json(results, &output_dir)?;
         self.write_params_to_json(params, &output_dir)?;
         Ok(())
